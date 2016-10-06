@@ -13,103 +13,115 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-public class DatabaseSAXParser {
-    public static void main(String[] args){
+public class DatabaseSAXParser  {
+	public static void main(String[] args) {
 
-        try {
-            File inputFile = new File("input.txt");
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            SAXParser saxParser = factory.newSAXParser();
-            UserHandler userhandler = new UserHandler();
-            saxParser.parse(inputFile, userhandler);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+		try {
+			File inputFile = new File("input2.txt");
+			SAXParserFactory factory = SAXParserFactory.newInstance();
+			SAXParser saxParser = factory.newSAXParser();
+			UserHandler userhandler = new UserHandler();
+			saxParser.parse(inputFile, userhandler);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }
+
 class UserHandler extends DefaultHandler {
 
-    boolean bFirstName = false;
-    boolean bLastName = false;
-    boolean bNickName = false;
-    boolean bMarks = false;
+	boolean bAuthor = false;
+	boolean bTitle = false;
+	boolean bYear = false;
+	boolean bJournal = false;
+	int primaryIndex = 0;
+	int authCount = 0;
 
-    File outputFile = new File("output.csv");
-    FileWriter fileWriter = null;
-    CSVWriter writer = null;
-    String[] nextLine = new String[5];
+	File articlesFile = new File("articleFile.csv");
+	File authorsFile = new File ("authorsFile.csv");
+	FileWriter fileWriter = null;
+	CSVWriter articleWriter = null;
+	CSVWriter authorWriter = null;
+	String[] nextArticleLine = new String[5];
+	String[] nextAuthorLine = new String[10];
+	
+	@Override
+	public void startDocument() {
+		try {
+			articleWriter = new CSVWriter(new FileWriter(articlesFile));
+			authorWriter = new CSVWriter (new FileWriter(authorsFile));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
+	@Override
+	public void startElement(String uri, String localName, String qName,
+			Attributes attributes) throws SAXException {
 
-    @Override
-    public void startElement(String uri,
-                             String localName, String qName, Attributes attributes)
-            throws SAXException {
-        try{
-            fileWriter = new FileWriter(outputFile);
-            writer = new CSVWriter(fileWriter);
-        }catch(IOException e){
-            e.printStackTrace();
-        }
-        if (qName.equalsIgnoreCase("student")) {
-            String rollNo = attributes.getValue("rollno");
-            System.out.println("Roll No : " + rollNo);
-            nextLine[0] = rollNo;
-            //nextLine[0] = "Hello";
-            //writer.writeNext(nextLine);
-        } else if (qName.equalsIgnoreCase("firstname")) {
-            bFirstName = true;
-        } else if (qName.equalsIgnoreCase("lastname")) {
-            bLastName = true;
-        } else if (qName.equalsIgnoreCase("nickname")) {
-            bNickName = true;
-        }
-        else if (qName.equalsIgnoreCase("marks")) {
-            bMarks = true;
-        }
-    }
+		if (qName.equals("article")) {
+			newEntry();
+		} else if (qName.equals("author")) {
+			bAuthor = true;
+		} else if (qName.equals("year")) {
+			bYear = true;
+		} else if (qName.equals("title")) {
+			bTitle = true;
+		} else if (qName.equals("journal")) {
+			bJournal = true;
+		}
+	}
 
-    @Override
-    public void endElement(String uri,
-                           String localName, String qName) throws SAXException {
-        if (qName.equalsIgnoreCase("student")) {
-            System.out.println("End Element :" + qName);
-            System.out.println("nextline: " + nextLine[0]);
-            writer.writeNext(nextLine);
-            try {
-                writer.close();
-            }catch(IOException e){
-                e.printStackTrace();
-            }
-        }
-    }
+	private void newEntry() {
+		nextArticleLine[0] = primaryIndex + "";
+		primaryIndex++;
+		nextAuthorLine = new String[10];
+		authCount = 0;
+		
+	}
 
-    @Override
-    public void characters(char ch[],
-                           int start, int length) throws SAXException {
-        if (bFirstName) {
-            String firstName = new String(ch, start, length);
-            System.out.println("First Name: "
-                    + firstName);
-            nextLine[1] = firstName;
-            bFirstName = false;
-        } else if (bLastName) {
-            String lastName = new String(ch, start, length);
-            System.out.println("Last Name: "
-                    + lastName);
-            nextLine[2] = lastName;
-            bLastName = false;
-        } else if (bNickName) {
-            String nickName = new String(ch, start, length);
-            System.out.println("Nick Name: "
-                    + nickName);
-            nextLine[3] = nickName;
-            bNickName = false;
-        } else if (bMarks) {
-            String marks = new String(ch, start, length);
-            System.out.println("Marks: "
-                    + marks);
-            nextLine[4] = marks;
-            bMarks = false;
-        }
-    }
+	@Override
+	public void endElement(String uri, String localName, String qName)
+			throws SAXException {
+		if (qName.equals("article")) {
+			articleWriter.writeNext(nextArticleLine);
+			authorWriter.writeNext(nextAuthorLine);
+		}
+	}
+
+	@Override
+	public void characters(char ch[], int start, int length)
+			throws SAXException {
+		
+		if (bAuthor){
+			String auth = new String(ch, start, length);
+			nextAuthorLine[authCount] = auth;
+			authCount++;
+			bAuthor = false;
+		}
+		else if (bTitle) {
+			String tit = new String(ch, start, length);
+			nextArticleLine[1] = tit;
+			bTitle = false;
+		} else if (bYear) {
+			String year = new String(ch, start, length);
+			nextArticleLine[2] = year;
+			bYear = false;
+		} else if (bJournal) {
+			String journ = new String(ch, start, length);
+			nextArticleLine[3] = journ;
+			bJournal = false;
+		} 
+	}
+
+	@Override
+	public void endDocument() {
+		try {
+			articleWriter.close();
+			authorWriter.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 }
