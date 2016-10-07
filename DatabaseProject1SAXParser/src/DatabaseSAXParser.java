@@ -36,7 +36,7 @@ public class DatabaseSAXParser {
 class UserHandler extends DefaultHandler {
 
 	boolean nonsense = false;
-	int primaryIndex = 0;
+	int primaryIndex = 1;
 	int authCount = 0;
 
 	File articlesFile = new File("articleFile.csv");
@@ -50,7 +50,10 @@ class UserHandler extends DefaultHandler {
 	String[] nextTitleLine = new String[1];
 	String[] nextAuthorLine = new String[20];
 	StringBuilder chars = new StringBuilder();
-	String element;
+	boolean yearSet;
+	boolean titleSet;
+	boolean journalSet;
+	
 
 	@Override
 	public void startDocument() {
@@ -61,17 +64,35 @@ class UserHandler extends DefaultHandler {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		unsetBools();
 	}
 
 	@Override
 	public void startElement(String uri, String localName, String qName,
 			Attributes attributes) throws SAXException {
-		if //(attributes.getLength() > 0) {
-		(isPublished(qName)){
+		if // (attributes.getLength() > 0) {
+		(isPublished(qName)) {
 			newEntry();
-			element = qName;
-		} else if (qName.equals("author") || qName.equals("title")
-				|| qName.equals("year") || qName.equals("journal")) {
+			// element = qName;
+		} else if (qName.equals("author"))
+			chars.setLength(0);
+		else if (qName.equals("title")) {
+			if (!titleSet) {
+				titleSet = true;
+			} else
+				nonsense = true;
+			chars.setLength(0);
+		} else if (qName.equals("year")) {
+			if (!yearSet) {
+				yearSet = true;
+			} else
+				nonsense = true;
+			chars.setLength(0);
+		} else if (qName.equals("journal")) {
+			if (!journalSet) {
+				journalSet = true;
+			} else
+				nonsense = true;
 			chars.setLength(0);
 		}
 
@@ -91,8 +112,7 @@ class UserHandler extends DefaultHandler {
 		chars.setLength(0);
 		nonsense = false;
 		nextArticleLine[0] = primaryIndex + "";
-		primaryIndex++;
-		nextAuthorLine = new String[1000];
+		nextAuthorLine = new String[300];
 		authCount = 0;
 
 	}
@@ -105,25 +125,35 @@ class UserHandler extends DefaultHandler {
 			nextAuthorLine[authCount] = chars.toString();
 			authCount++;
 			if (authCount >= 50) {
-				// authCount = 0;
+				authCount = 0;
 				System.out.println(primaryIndex + " " + localName);
-				nonsense = true;
+				// nonsense = true;
 			}
 		} else if (qName.equals("year")) {
-			// needs to set nonsense to true if already appeared!
 			nextArticleLine[1] = chars.toString();
 		} else if (qName.equals("title")) {
 			nextTitleLine[0] = chars.toString();
 		} else if (qName.equals("journal")) {
 			nextArticleLine[2] = chars.toString();
-		} else // if (!nonsense) {
-		if (qName.equals(element)) {
-			articleWriter.writeNext(nextArticleLine);
-			authorWriter.writeNext(nextAuthorLine);
-			titleWriter.writeNext(nextTitleLine);
+		} else if ((!nonsense)&& isPublished(qName)) {
+				unsetBools();
+				primaryIndex++;
+				articleWriter.writeNext(nextArticleLine);
+				authorWriter.writeNext(nextAuthorLine);
+				titleWriter.writeNext(nextTitleLine);
+			}
+		else if (nonsense){
+			unsetBools();
 		}
-		// }
+		
 
+	}
+
+	private void unsetBools() {
+		yearSet=false;
+		titleSet=false;
+		journalSet=false;
+		
 	}
 
 	@Override
