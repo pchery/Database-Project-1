@@ -15,13 +15,14 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-
-public class DatabaseSAXParser{
+public class DatabaseSAXParser {
 	public static void main(String[] args) {
 
 		try {
 			File inputFile = new File("dblp.xml");
 			SAXParserFactory factory = SAXParserFactory.newInstance();
+			factory.setNamespaceAware(true);
+			factory.setValidating(true);
 			SAXParser saxParser = factory.newSAXParser();
 			UserHandler userhandler = new UserHandler();
 			saxParser.parse(inputFile, userhandler);
@@ -34,17 +35,13 @@ public class DatabaseSAXParser{
 
 class UserHandler extends DefaultHandler {
 
-	boolean bAuthor = false;
-	boolean bTitle = false;
-	boolean bYear = false;
-	boolean bJournal = false;
 	boolean nonsense = false;
-	int primaryIndex = 0;
+	int primaryIndex = 1;
 	int authCount = 0;
 
 	File articlesFile = new File("articleFile.csv");
-	File authorsFile = new File ("authorsFile.csv");
-	File titleFile = new File ("titleFile.csv");
+	File authorsFile = new File("authorsFile.csv");
+	File titleFile = new File("titleFile.csv");
 	FileWriter fileWriter = null;
 	CSVWriter articleWriter = null;
 	CSVWriter authorWriter = null;
@@ -52,13 +49,15 @@ class UserHandler extends DefaultHandler {
 	String[] nextArticleLine = new String[3];
 	String[] nextTitleLine = new String[1];
 	String[] nextAuthorLine = new String[20];
-	
+	StringBuilder chars = new StringBuilder();
+	String element;
+
 	@Override
 	public void startDocument() {
 		try {
 			articleWriter = new CSVWriter(new FileWriter(articlesFile));
-			authorWriter = new CSVWriter (new FileWriter(authorsFile));
-			titleWriter = new CSVWriter (new FileWriter(titleFile));
+			authorWriter = new CSVWriter(new FileWriter(authorsFile));
+			titleWriter = new CSVWriter(new FileWriter(titleFile));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -67,85 +66,68 @@ class UserHandler extends DefaultHandler {
 	@Override
 	public void startElement(String uri, String localName, String qName,
 			Attributes attributes) throws SAXException {
-
-		if (qName.equals("article")) {
+		if (attributes.getLength()>0) {
 			newEntry();
-		} else if (qName.equals("author")) {
-			bAuthor = true;
-		} else if (qName.equals("year")) {
-			bYear = true;
-		} else if (qName.equals("title")) {
-			bTitle = true;
-		} else if (qName.equals("journal")) {
-			bJournal = true;
-		} else if (qName.equals("phdthesis")) {
-			newEntry();
-		} else if (qName.equals("inproceedings")) {
-			newEntry();
-		} else if (qName.equals("www")) {
-			newEntry();
-		} else if (qName.equals("mastersthesis")) {
-			newEntry();
+			element = qName;
+		} else if (qName.equals("author") || qName.equals("title")
+				|| qName.equals("year") || qName.equals("journal")) {
+			chars.setLength(0);
 		}
-		
-	}
 
+	}
+	
 	private void newEntry() {
+		chars.setLength(0);;
+		nonsense = false;
 		nextArticleLine[0] = primaryIndex + "";
 		primaryIndex++;
 		nextAuthorLine = new String[20];
 		authCount = 0;
-		
+
 	}
 
 	@Override
 	public void endElement(String uri, String localName, String qName)
 			throws SAXException {
-		if (qName.equals("article")&&!nonsense) {
-			articleWriter.writeNext(nextArticleLine);
-			authorWriter.writeNext(nextAuthorLine);
-			titleWriter.writeNext(nextTitleLine);
-			
+		if (qName.equals("author")) {
+			//enters here more times than it should!
+			nextAuthorLine[authCount] = chars.toString();
+			authCount++;
+			if (authCount >= 20) {
+				authCount = 0;
+				System.out.println(primaryIndex + " ");
+				nonsense = true;
+			}
+		} else if (qName.equals("year")) {
+			//needs to set nonsense to true if already appeared!
+			nextArticleLine[1] = chars.toString();
+		} else if (qName.equals("title")) {
+			nextTitleLine[0] = chars.toString();
+		} else if (qName.equals("journal")) {
+			nextArticleLine[2] = chars.toString();
+		} else if (!nonsense) {
+			if (qName.equals(element)) {
+				articleWriter.writeNext(nextArticleLine);
+				authorWriter.writeNext(nextAuthorLine);
+				titleWriter.writeNext(nextTitleLine);
+			}
 		}
-		else
-			nonsense = false;
+
 	}
 
 	@Override
 	public void characters(char ch[], int start, int length)
 			throws SAXException {
-		
-		if (bAuthor){
-			String auth = new String(ch, start, length);
-			nextAuthorLine[authCount] = auth;
-			authCount++;
-			if (authCount >=20){
-				authCount = 0;
-				nonsense = true;
-			}
-			bAuthor = false;
-		}
-		else if (bTitle) {
-			String tit = new String(ch, start, length);
-			nextTitleLine[0] = tit;
-			bTitle = false;
-		} else if (bYear) {
-			String year = new String(ch, start, length);
-			nextArticleLine[1] = year;
-			bYear = false;
-		} else if (bJournal) {
-			String journ = new String(ch, start, length);
-			nextArticleLine[2] = journ;
-			bJournal = false;
-		} 
+		chars.append(new String(ch, start, length));
 	}
-	
+
 	@Override
 	public void endDocument() {
 		try {
 			articleWriter.close();
 			authorWriter.close();
 			titleWriter.close();
+			System.out.println("End of document reached!");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
