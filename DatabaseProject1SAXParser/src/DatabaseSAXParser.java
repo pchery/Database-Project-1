@@ -139,13 +139,21 @@ class UserHandler extends DefaultHandler {
             primaryIndex++;
             nextFieldsLine[1] = qName;
             articleWriter.writeNext(nextFieldsLine);
-            authorWriter.writeNext(nextAuthorLine);
+            authorWriter.writeNext(dynamicArray());
         } else if (nonsense) {
             unsetBools();
             authCount=0;
         }
 
 
+    }
+
+    private String[] dynamicArray() {
+        String[] arr = new String[authCount];
+        for(int i=0; i<authCount; i++){
+            arr[i]=nextAuthorLine[i];
+        }
+        return arr;
     }
 
     private boolean inConference(String qName) {
