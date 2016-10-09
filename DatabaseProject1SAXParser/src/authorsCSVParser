@@ -42,15 +42,20 @@ public class authorsCSVParser {
     public void parse() {
 
         int authIndex = 0;
+        int pubIndex = 0;
         String[] nextLine;
         try {
             while ((nextLine = reader.readNext()) != null) {
                 // nextLine[] is an array of values from the line
                 for (String s : nextLine) {
                    if(null == authMap.putIfAbsent(s, authIndex)) {
+                	   assocLine[0]=authIndex+"";
+                	   assocLine[1]=pubIndex+"";
+                	   assocFileWriter.writeNext(assocLine);
                        authIndex++;
                    }
                 }
+                pubIndex++;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -67,6 +72,7 @@ public class authorsCSVParser {
         }
         try {
 			authIDWriter.close();
+			assocFileWriter.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
