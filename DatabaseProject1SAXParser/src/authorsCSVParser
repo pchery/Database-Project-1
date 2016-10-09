@@ -1,0 +1,75 @@
+
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+public class authorsCSVParser {
+    public static void main(String[] args) {
+        authorsCSVParser s = new authorsCSVParser();
+    }
+    CSVReader reader;
+    CSVWriter authIDWriter;
+    CSVWriter assocFileWriter;
+    HashMap<String, Integer> authMap;
+    String[] assocLine = new String[2];
+
+    File file = new File("authorsTest.csv");
+    File authorIDFile = new File("authorID.csv");
+    File associativeFile = new File("associative.csv");
+    public authorsCSVParser(){
+        authMap = new HashMap<>();
+
+        try {
+            reader = new CSVReader(new FileReader(file));
+            authIDWriter = new CSVWriter(new FileWriter(authorIDFile));
+            assocFileWriter = new CSVWriter(new FileWriter(associativeFile));
+            parse();
+            writeToFile();
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void parse() {
+
+        int authIndex = 0;
+        String[] nextLine;
+        try {
+            while ((nextLine = reader.readNext()) != null) {
+                // nextLine[] is an array of values from the line
+                for (String s : nextLine) {
+                   if(null == authMap.putIfAbsent(s, authIndex)) {
+                       authIndex++;
+                   }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void writeToFile() {
+        String[] line = new String[2];
+        for (Map.Entry<String, Integer> entry : authMap.entrySet()) {
+            line[0] = entry.getValue().toString();
+            line[1] = entry.getKey();
+            authIDWriter.writeNext(line);
+        }
+        try {
+			authIDWriter.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+}
