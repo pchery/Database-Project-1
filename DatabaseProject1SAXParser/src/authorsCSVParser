@@ -1,4 +1,3 @@
-
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
@@ -19,18 +18,21 @@ public class authorsCSVParser {
     HashMap<String, Integer> authMap;
     String[] assocLine = new String[2];
 
-    File file = new File("authorsTest.csv");
+    File file = new File("authorsFile.csv");
     File authorIDFile = new File("authorID.csv");
     File associativeFile = new File("associative.csv");
     public authorsCSVParser(){
         authMap = new HashMap<>();
 
         try {
+        	long startTime=System.currentTimeMillis();
             reader = new CSVReader(new FileReader(file));
             authIDWriter = new CSVWriter(new FileWriter(authorIDFile));
             assocFileWriter = new CSVWriter(new FileWriter(associativeFile));
             parse();
             writeToFile();
+            long endTime = System.currentTimeMillis()-startTime;
+            System.out.println("Program took: "+endTime/1000 + " seconds to run");
 
 
         } catch (IOException e) {
@@ -42,20 +44,15 @@ public class authorsCSVParser {
     public void parse() {
 
         int authIndex = 0;
-        int pubIndex = 0;
         String[] nextLine;
         try {
             while ((nextLine = reader.readNext()) != null) {
                 // nextLine[] is an array of values from the line
                 for (String s : nextLine) {
                    if(null == authMap.putIfAbsent(s, authIndex)) {
-                	   assocLine[0]=authIndex+"";
-                	   assocLine[1]=pubIndex+"";
-                	   assocFileWriter.writeNext(assocLine);
                        authIndex++;
                    }
                 }
-                pubIndex++;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -72,7 +69,6 @@ public class authorsCSVParser {
         }
         try {
 			authIDWriter.close();
-			assocFileWriter.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
