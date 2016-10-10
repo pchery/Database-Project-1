@@ -51,14 +51,16 @@ public class authorsCSVParser {
 			while ((nextLine = reader.readNext()) != null) {
 				// nextLine[] is an array of values from the line
 				for (String s : nextLine) {
-					if (null == authMap.putIfAbsent(s, authIndex)) {
-						toFile[0] = authIndex + "";
-						authIndex++;
-					} else
-						toFile[0] = authMap.get(s) + "";
-					
-					toFile[1] = pubIndex + "";
-					assocFileWriter.writeNext(toFile);
+					if (!s.equals("")) {
+						if (null == authMap.putIfAbsent(s, authIndex)) {
+							toFile[0] = authIndex + "";
+							authIndex++;
+						} else
+							toFile[0] = authMap.get(s) + "";
+
+						toFile[1] = pubIndex + "";
+						assocFileWriter.writeNext(toFile);
+					}
 				}
 				pubIndex++;
 			}
