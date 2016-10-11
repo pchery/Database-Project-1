@@ -1,0 +1,11 @@
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by Fernflower decompiler)
+//
+
+import org.xml.sax.SAXException;
+
+public class BreakParsingException extends SAXException {
+    public BreakParsingException() {
+    }
+}
