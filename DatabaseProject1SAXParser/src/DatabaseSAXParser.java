@@ -51,6 +51,7 @@ class UserHandler extends DefaultHandler {
     boolean titleSet;
     boolean journalSet;
     long startTime = System.currentTimeMillis();
+    //int maxElement = 1738109;//1738109 for half the file, 869055 for quarter
 
     @Override
     public void startDocument() {
@@ -135,29 +136,45 @@ class UserHandler extends DefaultHandler {
         } else if (inConference(qName)) {
             nextFieldsLine[3] = chars.toString();
         } else if ((!nonsense) && isPublished(qName) && nextFieldsLine[2] != null && nextFieldsLine[4] !=null) {
-            unsetBools();
-            primaryIndex++;
-            nextFieldsLine[1] = qName;
-            articleWriter.writeNext(nextFieldsLine);
             boolean duplicate = false;
+            unsetBools();
             for(int i = 0; i< authCount; i++){
                 for(int j = i+1; j <authCount; j++){
                     if(nextAuthorLine[i].equals(nextAuthorLine[j])){
-                        System.out.println(nextAuthorLine[i]);
+                        //System.out.println(nextAuthorLine[i]);
                         duplicate = true;
                         nonsense = true;
                     }
                 }
             }
             if(!duplicate) {
+
+                primaryIndex++;
+                nextFieldsLine[1] = qName;
                 authorWriter.writeNext(dynamicArray());
+                articleWriter.writeNext(nextFieldsLine);
             }
         } else if (nonsense) {
             unsetBools();
             authCount=0;
         }
 
+//        if(primaryIndex>=maxElement){
+//            closeWriters();
+//
+//            throw new SAXException(new BreakParsingException());
+//        }
 
+
+    }
+
+    private void closeWriters() {
+        try {
+            authorWriter.close();
+            articleWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private String[] dynamicArray() {
@@ -192,15 +209,14 @@ class UserHandler extends DefaultHandler {
 
     @Override
     public void endDocument() {
-        try {
-            articleWriter.close();
-            authorWriter.close();
+        closeWriters();
             System.out.println("End of document reached!");
             long endTime = System.currentTimeMillis()-startTime;
             System.out.println("Program took: "+endTime/1000 + " seconds to run");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
     }
 
 }
+
+
+
