@@ -134,12 +134,24 @@ class UserHandler extends DefaultHandler {
             nextFieldsLine[4] = chars.toString();
         } else if (inConference(qName)) {
             nextFieldsLine[3] = chars.toString();
-        } else if ((!nonsense) && isPublished(qName)) {
+        } else if ((!nonsense) && isPublished(qName) && nextFieldsLine[2] != null && nextFieldsLine[4] !=null) {
             unsetBools();
             primaryIndex++;
             nextFieldsLine[1] = qName;
             articleWriter.writeNext(nextFieldsLine);
-            authorWriter.writeNext(dynamicArray());
+            boolean duplicate = false;
+            for(int i = 0; i< authCount; i++){
+                for(int j = i+1; j <authCount; j++){
+                    if(nextAuthorLine[i].equals(nextAuthorLine[j])){
+                        System.out.println(nextAuthorLine[i]);
+                        duplicate = true;
+                        nonsense = true;
+                    }
+                }
+            }
+            if(!duplicate) {
+                authorWriter.writeNext(dynamicArray());
+            }
         } else if (nonsense) {
             unsetBools();
             authCount=0;
@@ -150,8 +162,9 @@ class UserHandler extends DefaultHandler {
 
     private String[] dynamicArray() {
         String[] arr = new String[authCount];
+        //boolean duplicate = false;
         for(int i=0; i<authCount; i++){
-            arr[i]=nextAuthorLine[i];
+            arr[i] = nextAuthorLine[i];
         }
         return arr;
     }
@@ -172,7 +185,9 @@ class UserHandler extends DefaultHandler {
     @Override
     public void characters(char ch[], int start, int length)
             throws SAXException {
+
         chars.append(new String(ch, start, length));
+
     }
 
     @Override
