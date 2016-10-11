@@ -1,89 +1,101 @@
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by Fernflower decompiler)
+//
+
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 public class authorsCSVParser {
-    public static void main(String[] args) {
-        authorsCSVParser s = new authorsCSVParser();
-    }
-
     CSVReader reader;
     CSVWriter authIDWriter;
     CSVWriter assocFileWriter;
-    HashMap<String, Integer> authMap;
-
+    HashMap<String, Integer> authMap = new HashMap();
     File file = new File("authorsFile.csv");
     File authorIDFile = new File("authorID.csv");
     File associativeFile = new File("associative.csv");
 
+    public static void main(String[] args) {
+        new authorsCSVParser();
+    }
+
     public authorsCSVParser() {
-        authMap = new HashMap<>();
-
         try {
-            long startTime = System.currentTimeMillis();
-            reader = new CSVReader(new FileReader(file));
-            authIDWriter = new CSVWriter(new FileWriter(authorIDFile));
-            assocFileWriter = new CSVWriter(new FileWriter(associativeFile));
-            parse();
-            writeToFile();
-            long endTime = System.currentTimeMillis() - startTime;
-            System.out.println("Program took: " + endTime / 1000
-                    + " seconds to run");
-
-        } catch (IOException e) {
-            e.printStackTrace();
+            long e = System.currentTimeMillis();
+            this.reader = new CSVReader(new FileReader(this.file));
+            this.authIDWriter = new CSVWriter(new FileWriter(this.authorIDFile));
+            this.assocFileWriter = new CSVWriter(new FileWriter(this.associativeFile));
+            this.parse();
+            this.writeToFile();
+            long endTime = System.currentTimeMillis() - e;
+            System.out.println("Program took: " + endTime / 1000L + " seconds to run");
+        } catch (IOException var5) {
+            var5.printStackTrace();
         }
+
     }
 
     public void parse() {
-
         int authIndex = 1;
         int pubIndex = 1;
-        String[] nextLine;
         String[] toFile = new String[2];
+
         try {
-            while ((nextLine = reader.readNext()) != null) {
-                // nextLine[] is an array of values from the line
-                for (String s : nextLine) {
-                    if (!s.equals("")) {
-                        if (null == authMap.putIfAbsent(s, authIndex)) {
+            String[] nextLine;
+            while((nextLine = this.reader.readNext()) != null) {
+                String[] e = nextLine;
+                int var6 = nextLine.length;
+
+                for(int var7 = 0; var7 < var6; ++var7) {
+                    String s = e[var7];
+                    if(!s.equals("")) {
+                        if(null == this.authMap.putIfAbsent(s, Integer.valueOf(authIndex))) {
                             toFile[0] = authIndex + "";
-                            authIndex++;
-                        } else
-                            toFile[0] = authMap.get(s) + "";
+                            ++authIndex;
+                        } else {
+                            toFile[0] = this.authMap.get(s) + "";
+                        }
 
                         toFile[1] = pubIndex + "";
-                        assocFileWriter.writeNext(toFile);
+                        this.assocFileWriter.writeNext(toFile);
                     }
                 }
-                pubIndex++;
+
+                ++pubIndex;
             }
-            reader.close();
-            assocFileWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+
+            this.reader.close();
+            this.assocFileWriter.close();
+        } catch (IOException var9) {
+            var9.printStackTrace();
         }
 
     }
 
     public void writeToFile() {
         String[] line = new String[2];
-        for (Map.Entry<String, Integer> entry : authMap.entrySet()) {
-            line[0] = entry.getValue().toString();
-            line[1] = entry.getKey();
-            authIDWriter.writeNext(line);
+        Iterator e = this.authMap.entrySet().iterator();
+
+        while(e.hasNext()) {
+            Entry entry = (Entry)e.next();
+            line[0] = ((Integer)entry.getValue()).toString();
+            line[1] = (String)entry.getKey();
+            this.authIDWriter.writeNext(line);
         }
+
         try {
-            authIDWriter.close();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            this.authIDWriter.close();
+        } catch (IOException var4) {
+            var4.printStackTrace();
         }
+
     }
 }
+
